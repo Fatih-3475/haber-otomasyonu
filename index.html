@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14110e">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HaberAkışı">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<title>HaberAkışı</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="frame z1">
+
+  <div class="masthead z1">
+    <div class="rule-top"></div>
+    <div class="meta-row">
+      <span id="tarih">—</span>
+      <span>Haber Otomasyonu</span>
+      <span>**** Üniversitesi</span>
+    </div>
+    <div class="logo">Haber<em>Akışı</em></div>
+    <div class="sub">Google Drive → AI Agent → Çıktı</div>
+  </div>
+
+  <div class="status-bar z1">
+    <div class="dot"></div>
+    <span class="status-txt">Drive bağlantısı <strong>hazır</strong></span>
+  </div>
+
+  <div class="sec z1">İşlemler</div>
+  <div class="cards z1">
+
+    <div class="card" onclick="openModal('analiz')">
+      <div class="card-stripe gold"></div>
+      <div class="card-body">
+        <div class="icon-box gold">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zM9 13h6v1.5H9zm0 3h6v1.5H9zm0-6h2v1.5H9z"/></svg>
+        </div>
+        <div class="card-txt">
+          <div class="card-title">Haber Dosyası Analiz Et</div>
+          <div class="card-desc">PDF veya TXT yükle → Gemini AI analiz eder → sonuç Drive'a yazılır</div>
+        </div>
+        <div class="card-arr">›</div>
+      </div>
+    </div>
+
+    <div class="card" onclick="openModal('telegram')">
+      <div class="card-stripe blue"></div>
+      <div class="card-body">
+        <div class="icon-box blue">
+          <svg viewBox="0 0 24 24"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
+        </div>
+        <div class="card-txt">
+          <div class="card-title">Ses Dosyası → Telegram</div>
+          <div class="card-desc">Ses yükle → transkripsiyon → Gemini özetler → Telegram kanalına gönderir</div>
+        </div>
+        <div class="card-arr">›</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="divider z1"><div class="diamond"></div></div>
+
+  <div class="sec z1">Son Haberler</div>
+  <div class="feed z1" id="feedContainer">
+    <div class="feed-loading" id="feedLoading">Haberler yükleniyor...</div>
+  </div>
+
+  <div style="height:2.5rem"></div>
+</div>
+
+<!-- MODAL 1: ANALİZ (PDF / TXT) -->
+<div class="backdrop" id="modalAnaliz" onclick="backdropClick(event,'modalAnaliz')">
+  <div class="sheet">
+    <div class="handle"></div>
+    <button class="close-btn" onclick="closeModal('modalAnaliz')">✕</button>
+    <div class="modal-title">Haber Dosyası Analiz Et</div>
+    <div class="modal-sub">PDF veya TXT seç → Editör klasörüne yükle → n8n tetiklenir → Gemini işler → sonuç gelir</div>
+
+    <!-- Akış göstergesi -->
+    <div class="flow">
+      <div class="step" id="a1">📂 Seç</div>
+      <div class="flow-arr">→</div>
+      <div class="step" id="a2">☁️ Drive</div>
+      <div class="flow-arr">→</div>
+      <div class="step" id="a3">⚡ n8n</div>
+      <div class="flow-arr">→</div>
+      <div class="step" id="a4">🤖 Gemini</div>
+      <div class="flow-arr">→</div>
+      <div class="step" id="a5">✅ Sonuç</div>
+    </div>
+    <div class="prog-wrap"><div class="prog-fill gold" id="aProgBar"></div></div>
+
+    <!-- Format seçimi -->
+    <div class="fmt-row">
+      <div class="fmt-btn sel" id="fmtPdf" onclick="setFmt('pdf')">
+        <span class="fmt-emoji">📄</span>
+        <div class="fmt-label">PDF</div>
+      </div>
+      <div class="fmt-btn" id="fmtTxt" onclick="setFmt('txt')">
+        <span class="fmt-emoji">📝</span>
+        <div class="fmt-label">TXT</div>
+      </div>
+    </div>
+
+    <!-- Dosya seçici -->
+    <div class="filepick" onclick="document.getElementById('fileInputAnaliz').click()">
+      <div class="fp-icon">📎</div>
+      <div>
+        <div class="fp-label">Dosyayı Seç</div>
+        <div class="fp-hint" id="aPickHint">PDF veya TXT dosyası seçin</div>
+        <div class="fp-name" id="aPickedName"></div>
+      </div>
+    </div>
+    <input type="file" id="fileInputAnaliz" accept=".pdf,.txt" onchange="onFileSelectAnaliz(event)">
+
+    <!-- Bilgi satırları -->
+    <div class="info-row">
+      <span class="info-key">Klasör</span>
+      <span class="info-val">Editör (Google Drive)</span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">Sonuç</span>
+      <span class="info-val" id="aResultHint">Analiz_[dosyaadı].txt</span>
+    </div>
+
+    <!-- Sonuç paneli -->
+    <div class="result-panel" id="aResultPanel">
+      <div class="result-top">
+        <span>✅</span>
+        <span class="result-title">Analiz tamamlandı!</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px" id="aResultName"></div>
+      <span class="result-link" onclick="openAnalysisResult()">Drive'da Aç →</span>
+    </div>
+
+    <button class="main-btn gold-btn" id="aBtnMain" onclick="handleAnalizUpload()">
+      Drive'a Yükle &amp; Analiz Başlat
+    </button>
+  </div>
+</div>
+
+     <!-- MODAL 2: SES → TELEGRAM -->
+<div class="backdrop" id="modalTelegram" onclick="backdropClick(event,'modalTelegram')">
+  <div class="sheet">
+    <div class="handle"></div>
+    <button class="close-btn" onclick="closeModal('modalTelegram')">✕</button>
+    <div class="modal-title">Ses Dosyası → Telegram</div>
+    <div class="modal-sub">Ses dosyasını yükle → transkripsiyon → Gemini özetler → Telegram kanalına gönderilir</div>
+
+    <!-- Akış göstergesi -->
+    <div class="flow">
+      <div class="step" id="t1">🎙 Seç</div>
+      <div class="flow-arr">→</div>
+      <div class="step" id="t2">☁️ Drive</div>
+      <div class="flow-arr">→</div>
+      <div class="step" id="t3">📝 Transkript</div>
+      <div class="flow-arr">→</div>
+      <div class="step" id="t4">🤖 Gemini</div>
+      <div class="flow-arr">→</div>
+      <div class="step" id="t5">📨 Telegram</div>
+    </div>
+    <div class="prog-wrap"><div class="prog-fill blue" id="tProgBar"></div></div>
+
+    <!-- Dosya seçici -->
+    <div class="filepick blue-theme" onclick="document.getElementById('fileInputTg').click()">
+      <div class="fp-icon">🎙</div>
+      <div>
+        <div class="fp-label">Ses Dosyası Seç</div>
+        <div class="fp-hint" id="tPickHint">MP3, MP4, WAV, M4A, OGG</div>
+        <div class="fp-name" id="tPickedName"></div>
+      </div>
+    </div>
+    <input type="file" id="fileInputTg" accept=".mp3,.mp4,.wav,.m4a,.ogg,.webm" onchange="onFileSelectTg(event)">
+
+    <!-- Bilgi satırları -->
+    <div class="info-row">
+      <span class="info-key">Klasör</span>
+      <span class="info-val">Ses Klasörü (Google Drive)</span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">Çıktı</span>
+      <span class="info-val">ozet_[tarih].txt → Telegram</span>
+    </div>
+
+    <!-- Telegram sonuç -->
+    <div class="tg-result" id="tResultPanel">
+      <div class="tg-result-title">📨 Telegram'a gönderildi!</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:.6rem">
+        Özet belgeniz Telegram kanalına iletildi.
+      </div>
+      <button class="tg-btn-small" onclick="openTelegram()">Kanalı Aç →</button>
+    </div>
+
+    <button class="main-btn blue-btn" id="tBtnMain" onclick="handleTgUpload()">
+      Ses Yükle &amp; Telegram'a Gönder
+    </button>
+
+    <div style="margin-top:.75rem;text-align:center;font-size:11px;color:var(--muted)">
+      İşlem süresi ~15 dakika — Telegram kanalını takip edin
+    </div>
+
+    <div style="margin-top:.6rem;text-align:center">
+      <button class="tg-btn-small" onclick="openTelegram()"
+        style="background:transparent;color:var(--blue);border:1px solid var(--blue)">
+        Telegram Kanalına Git →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script src="ui.js"></script>
+<script src="drive.js"></script>
+<script src="feed.js"></script>
+
+<!-- PWA Service Worker -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('SW kayıtlı'))
+        .catch(e => console.log('SW hatası:', e));
+    });
+  }
+</script>
+
+</body>
+</html>
